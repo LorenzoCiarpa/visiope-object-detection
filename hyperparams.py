@@ -1,3 +1,5 @@
+import torch
+
 class hypers():
   seed = 123
   torch.manual_seed(seed)
@@ -17,3 +19,4 @@ class hypers():
   NUM_BOXES=2
   SPLIT=7
   DATASET_PATH = "LOCAL" #LOCAL/DRIVE
+  

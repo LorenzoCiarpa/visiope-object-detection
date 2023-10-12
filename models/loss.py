@@ -1,4 +1,7 @@
- 
+import torch
+import torch.nn as nn 
+from dataprocess.dataprocess import *
+
 class YoloLoss(nn.Module):
     def __init__(self, S=7, B=2, C=20):
         super(YoloLoss, self).__init__()
@@ -138,7 +141,7 @@ class YoloLossMultiBoxes(nn.Module):
         pred_shape = list(pred_shape)
         pred_shape.append(4)
 
-        box_predictions = torch.zeros(pred_shape).to(DEVICE) # batch_size x S x S x 4
+        box_predictions = torch.zeros(pred_shape).to(hypers.DEVICE) # batch_size x S x S x 4
 
         for i_1 in range(self.B): #prendo solo quello relativo all'argmax
             # preds_box = ((1 + i_1) - bestbox)
@@ -191,7 +194,7 @@ class YoloLossMultiBoxes(nn.Module):
         pred_shape = predictions.shape[0:3]
         pred_shape = list(pred_shape)
         pred_shape.append(1)
-        preds = torch.zeros(pred_shape).to(DEVICE) # batch_size x S x S x 1
+        preds = torch.zeros(pred_shape).to(hypers.DEVICE) # batch_size x S x S x 1
 
         for i_1 in range(self.B): #prendo solo quello relativo all'argmax
             # preds_box = ((1 + i_1) - bestbox)

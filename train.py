@@ -1,5 +1,5 @@
-import tqdm
-import hypers
+from tqdm import tqdm
+from hyperparams import hypers
 
 def train_fn(train_loader, model, optimizer, loss_fn):
     loop = tqdm(train_loader, leave=True)
