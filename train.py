@@ -2,7 +2,7 @@ from tqdm import tqdm
 from hyperparams import hypers
 
 def train_fn(train_loader, model, optimizer, loss_fn):
-    loop = tqdm(train_loader, leave=True)
+    loop = tqdm(train_loader, position= 0, leave=True)
     mean_loss = []
 
     for batch_idx, (x, y) in enumerate(loop):
@@ -19,3 +19,5 @@ def train_fn(train_loader, model, optimizer, loss_fn):
 
 
     print(f"Mean loss was {sum(mean_loss)/len(mean_loss)}")
+    
+    

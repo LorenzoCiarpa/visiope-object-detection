@@ -14,6 +14,7 @@ class hypers():
   NUM_WORKERS = 2
   PIN_MEMORY = True
   LOAD_MODEL = False
+  LOAD_MODEL_v8 = False
   LOAD_MODEL_FILE = "./overfit.pth.tar"
   NUM_CLASSES=1
   NUM_BOXES=2

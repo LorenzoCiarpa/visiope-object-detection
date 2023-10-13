@@ -8,6 +8,118 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import subprocess
 from hyperparams import hypers
+import yaml
+from tqdm import tqdm
+import shutil
+
+def populate_v1_dir(drive_dir, imgs_list, images_dir, labels_dir, train_imgs_dir):
+  #Dataframe Creation
+  csv_path=os.path.join(drive_dir,"train_solution_bounding_boxes (1).csv")
+
+  df=pd.read_csv(csv_path)
+
+  width=676
+  height=380
+
+  df["class"]=0
+  df.rename(columns={'image':'img_name'}, inplace=True)
+
+  df["x_centre"]=(df["xmin"]+df["xmax"])/2
+  df["y_centre"]=(df["ymin"]+df["ymax"])/2
+  df["width"]=(df["xmax"]-df["xmin"])
+  df["height"]=(df["ymax"]-df["ymin"])
+
+  #normalizing bounding box coordinates
+  df["x_centre"]=df["x_centre"]/width
+  df["y_centre"]=df["y_centre"]/height
+  df["width"]=df["width"]/width
+  df["height"]=df["height"]/height
+
+  df_yolo=df[["img_name","class","x_centre","y_centre","width","height"]]
+  
+  
+  incompatible_imgs = []
+
+  for idx, img_name in tqdm(enumerate(imgs_list)):
+
+      if np.isin(img_name, df_yolo["img_name"]):
+          columns=["class","x_centre","y_centre","width","height"]
+          img_bbox=df_yolo[df_yolo["img_name"]==img_name][columns].values
+
+          label_file_path=os.path.join(labels_dir,img_name[:-4]+".txt")
+          with open(label_file_path,"w+") as f:
+              for row in img_bbox:
+                  text=" ".join(row.astype(str))
+                  f.write(text)
+                  f.write("\n")
+
+          old_image_path=os.path.join(train_imgs_dir,img_name)
+          new_image_path=os.path.join(images_dir,img_name)
+
+          #copy images from training_images to image directory
+          shutil.copy(old_image_path,new_image_path)
+      else:
+        incompatible_imgs.append(img_name)
+        
+  return incompatible_imgs
+
+def populate_v8_dir(drive_dir, imgs_list, images_dir, labels_dir, train_imgs_dir, val_idx):
+  #Dataframe Creation
+  csv_path=os.path.join(drive_dir,"train_solution_bounding_boxes (1).csv")
+
+  df=pd.read_csv(csv_path)
+
+  width=676
+  height=380
+
+  df["class"]=0
+  df.rename(columns={'image':'img_name'}, inplace=True)
+
+  df["x_centre"]=(df["xmin"]+df["xmax"])/2
+  df["y_centre"]=(df["ymin"]+df["ymax"])/2
+  df["width"]=(df["xmax"]-df["xmin"])
+  df["height"]=(df["ymax"]-df["ymin"])
+
+  #normalizing bounding box coordinates
+  df["x_centre"]=df["x_centre"]/width
+  df["y_centre"]=df["y_centre"]/height
+  df["width"]=df["width"]/width
+  df["height"]=df["height"]/height
+
+  df_yolo=df[["img_name","class","x_centre","y_centre","width","height"]]
+  
+  for idx,img_name in tqdm(enumerate(imgs_list)):
+    subset="train"
+    if idx in val_idx:
+        subset="val"
+
+    if np.isin(img_name,df_yolo["img_name"]):
+        columns=["class","x_centre","y_centre","width","height"]
+        img_bbox=df_yolo[df_yolo["img_name"]==img_name][columns].values
+
+        label_file_path=os.path.join(labels_dir,subset,img_name[:-4]+".txt")
+        with open(label_file_path,"w+") as f:
+            for row in img_bbox:
+                text=" ".join(row.astype(str))
+                f.write(text)
+                f.write("\n")
+
+    old_image_path=os.path.join(train_imgs_dir,img_name)
+    new_image_path=os.path.join(images_dir,subset,img_name)
+    shutil.copy(old_image_path,new_image_path)
+  return
+
+def generate_yolov8_yaml(yolo_dir, images_dir_v8):
+  yolo_format=dict(path=yolo_dir,
+                 train=images_dir_v8+"/train",
+                 val=images_dir_v8+"/val",
+                 nc=1,
+                 names={0:"car"})
+
+  with open(yolo_dir+'/yolo.yaml', 'w') as outfile:
+      yaml.dump(yolo_format, outfile, default_flow_style=False)
+      
+  return
 
 def show_bbox(img,boxes,axis,color=(0,255,0)):
     img=img.copy()
@@ -18,6 +130,20 @@ def show_bbox(img,boxes,axis,color=(0,255,0)):
 
     axis.imshow(img)
     axis.axis("off")
+    
+def show_bbox_v8(img,boxes,scores,name,axis=0,color=(0,255,0)):
+    boxes=boxes.astype(int)
+    scores=scores
+    img=img.copy()
+    for i,box in enumerate(boxes):
+        score=f"{scores[i]:.4f}"
+        cv2.rectangle(img,(box[0],box[1]),(box[2],box[3]),color,2)
+        y=box[1]-10 if box[1]-10>10 else box[1]+10
+        cv2.putText(img,score,(box[0],y),cv2.FONT_HERSHEY_SIMPLEX,0.5,color,2)
+    plt.imshow(img)
+    # plt.savefig(name+".png")
+    #axis.imshow(img)
+    #axis.axis("off")
     
 def extract_box(img_dict):
   boxes=[]
