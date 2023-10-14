@@ -407,17 +407,3 @@ def cellboxes_to_boxes(out, S=7,B=2, C=20):
 
     return all_bboxes
 
-def makeCSVfile(dataset, folder):
-    images = subprocess.check_output("ls "+ dataset.location + folder + '/images', shell=True, text=True).split('\n')[:-1]
-    labels = subprocess.check_output("ls "+ dataset.location + folder + '/labels', shell=True, text=True).split('\n')[:-1]
-    return pd.DataFrame(data = {'image': images, 'text':labels})
-
-def save_checkpoint(state, filename="my_checkpoint.pth.tar", exit_training=False):
-    print("=> Saving checkpoint")
-    torch.save(state, filename)
-    if exit_training : exit()
-
-def load_checkpoint(checkpoint, model, optimizer):
-    print("=> Loading checkpoint")
-    model.load_state_dict(checkpoint["state_dict"])
-    optimizer.load_state_dict(checkpoint["optimizer"])

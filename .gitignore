@@ -28,6 +28,7 @@ yarn-error.log*
 
 .ipynb_checkpoints
 __pycache__
+annotations*
 
 /testing
 /archive

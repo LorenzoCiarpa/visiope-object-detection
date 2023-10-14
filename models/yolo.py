@@ -1,5 +1,10 @@
 import torch
 import torch.nn as nn
+import os
+from dataprocess.dataprocess import *
+from PIL import Image
+import torchvision.transforms as transforms
+from hyperparams import hypers
 
 architecture_config_v1 = [
     (7, 64, 2, 3),
@@ -89,6 +94,23 @@ class Yolov1(nn.Module):
             nn.LeakyReLU(0.1),
             nn.Linear(496, S*S*(B*5+C))
         )
+    def predict(self, source,conf=0.50,iou=0.75):
+        self.eval()
+        with torch.no_grad():
+
+          test_img_list=list(sorted(os.listdir(source)))
+          result={}
+          for image in test_img_list:
+            img_file_path=os.path.join(source,image)
+            img = Image.open(img_file_path)
+            for t in [transforms.Resize((448, 448)), transforms.ToTensor(),]:
+              img = t(img)
+            img=torch.unsqueeze(img, dim=0)
+            img = img.to(hypers.DEVICE)
+            bboxes = cellboxes_to_boxes(self(img),S=7,B=2, C=1)
+            bboxes = non_max_suppression(bboxes[0], iou_threshold=iou, threshold=conf, box_format="midpoint")
+            result[image]=bboxes
+        return result
 
 class Yolov2Tiny(nn.Module):
     def __init__(self, in_channels=3, **kwargs):
@@ -130,3 +152,21 @@ class Yolov2Tiny(nn.Module):
             nn.LeakyReLU(0.1),
             nn.Linear(496, S*S*(B*5+C))
         )
+      
+    def predict(self, source,conf=0.50,iou=0.75):
+        self.eval()
+        with torch.no_grad():
+
+          test_img_list=list(sorted(os.listdir(source)))
+          result={}
+          for image in test_img_list:
+            img_file_path=os.path.join(source,image)
+            img = Image.open(img_file_path)
+            for t in [transforms.Resize((448, 448)), transforms.ToTensor(),]:
+              img = t(img)
+            img=torch.unsqueeze(img, dim=0)
+            img = img.to(hypers.DEVICE)
+            bboxes = cellboxes_to_boxes(self(img),S=7,B=2, C=1)
+            bboxes = non_max_suppression(bboxes[0], iou_threshold=iou, threshold=conf, box_format="midpoint")
+            result[image]=bboxes
+        return result
