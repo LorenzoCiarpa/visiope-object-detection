@@ -2,6 +2,10 @@ import torch
 from PIL import Image
 import os
 from dataprocess.dataprocess_coco import get_bbox
+from torchvision import datapoints
+# import torchvision.transforms.functional as FT
+from torchvision.transforms.v2 import functional as F
+
 
 class VOCDataset(torch.utils.data.Dataset):
     def __init__(self, csv_file, label_dir, img_dir, S=7, B=2, C=20, transform=None):
@@ -115,6 +119,51 @@ class COCODataset(torch.utils.data.Dataset):
 
         return image,label_matrix
       
+def yolotobox(boxes,dw,dh):
+    new_boxes=[]
+    for box in boxes:
+      box=box[len(box)-4:]
+      x,y,w,h=box[0],box[1],box[2],box[3]
+      cx=x*dw
+      cy=y*dh
+      w1=w*dw
+      h1=h*dh
+
+      if cx < 0: cx = 0
+      if cy < 0: cy = 0
+      if w1 > dw - 1: w1 = dw - 1
+      if h1 > dh - 1: h1 = dh - 1
+      new_boxes.append([cx, cy, w1, h1])
+    return new_boxes
+
+def boxtoyolo(boxes,dw,dh):
+    boxes=boxes.tolist()
+    new_boxes=[]
+    for box in boxes:
+      x,y,w,h=box[0],box[1],box[2],box[3]
+      cx=x/dw
+      cy=y/dh
+      w1=w/dw
+      h1=h/dh
+      if w1<=0.05 or h1<=0.05:
+        continue
+      new_boxes.append([0.0,cx, cy, w1, h1])
+    return new_boxes
+  
+class Compose(object):
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, bboxes):
+        bboxes=yolotobox(bboxes,F.get_spatial_size(img)[1],F.get_spatial_size(img)[0])
+        if not bboxes:
+          bboxes.append([0.0,0.0,0.0,0.0])
+        bboxes = datapoints.BoundingBox(bboxes,format=datapoints.BoundingBoxFormat.CXCYWH,spatial_size=F.get_spatial_size(img),)
+        for t in self.transforms:
+            img, bboxes = t(img,bboxes)
+
+        return img, boxtoyolo(bboxes,448,448)
+
 class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
