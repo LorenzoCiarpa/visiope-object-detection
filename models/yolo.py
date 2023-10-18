@@ -31,16 +31,25 @@ architecture_config_v1 = [
 architecture_config_v2 = [
     (3, 16, 1, 1),
     "M-2",
+    # "BN",
+    # "D",
     (3, 32, 1, 1),
     "M-2",
+    # "BN",
     (3, 64, 1, 1),
     "M-2",
+    # "BN",
+    # "D",
     (3, 128, 1, 1),
     "M-2",
+    # "BN",
     (3, 256, 1, 1),
     "M-2",
+    # "D",
+    # "BN",
     (3, 512, 1, 1),
     "M-2",
+    # "BN",
     (3, 1024, 1, 1),
     (3, 1024, 1, 1),
     (1, 1024, 1, 0)
@@ -133,8 +142,16 @@ class Yolov2Tiny(nn.Module):
                 layers += [ CNNBlock(in_channels, x[1], kernel_size=x[0], stride=x[2], padding=x[3]) ]
                 in_channels = x[1]
             elif type(x)==str:
-                stride = int(x.split("-")[1])
-                layers += [ nn.MaxPool2d(kernel_size=2, stride=stride) ]
+                layer_type = x.split("-")
+        
+                if layer_type[0] == "M":
+                  stride = int(layer_type[1])
+                  layers += [ nn.MaxPool2d(kernel_size=2, stride=stride) ]
+                elif layer_type[0] == "BN":
+                  layers += [ nn.BatchNorm2d(in_channels) ]
+                elif layer_type[0] == "D":
+                  layers += [ nn.Dropout2d(p=0.2) ]
+                  
             elif type(x)==list:
                 conv1, conv2, num_repeats = x[0], x[1], x[2]
                 for i in range(num_repeats):

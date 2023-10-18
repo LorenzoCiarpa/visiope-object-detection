@@ -407,3 +407,21 @@ def cellboxes_to_boxes(out, S=7,B=2, C=20):
 
     return all_bboxes
 
+def plot_predicted_images_yolo(model, loader, stop_index=-1):
+  model.eval()
+  for index, (x, y) in enumerate(loader):
+        x = x.to(hypers.DEVICE)
+        for idx in range(8): #why untill 8?
+            if index < 2:
+                continue
+            bboxes = cellboxes_to_boxes(model(x), S=7, B=2, C=1)
+            bboxes = non_max_suppression(bboxes[idx], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
+            plot_image(x[idx].permute(1,2,0).to("cpu"), bboxes)
+
+        # import sys
+        # sys.exit()
+        if index == stop_index:
+            model.train()
+            return
+  model.train()
+  return

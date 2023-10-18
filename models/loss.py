@@ -47,7 +47,7 @@ class YoloLoss(nn.Module):
         '''
         object_loss = self.mse(
             torch.flatten(exists_box * ( (1-bestbox)*predictions[...,self.C:self.C+1] + bestbox*predictions[...,self.C+5:self.C+6] )),
-            torch.flatten(exists_box)
+            torch.flatten(exists_box) * target[...,self.C:self.C+1]
         )
         '''
         no_object_loss exists when no object are in the image

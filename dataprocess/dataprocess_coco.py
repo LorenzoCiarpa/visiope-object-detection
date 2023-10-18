@@ -110,7 +110,7 @@ def plot_image(image, boxes):
         ax.add_patch(rect)
     plt.show()
 
-def plot_real_images(data_coco, coco_dir, end_index=-1):
+def plot_real_images_coco(data_coco, coco_dir, end_index=-1):
   for index, image in enumerate(list(sorted(os.listdir(coco_dir)))):
     # print(image)
     bbox=get_bbox(data_coco, int(image[:len(image)-4]),[2])
@@ -124,7 +124,7 @@ def plot_real_images(data_coco, coco_dir, end_index=-1):
     if index == end_index:
       return
       
-def plot_predicted_images(coco_dir_test, result):
+def plot_predicted_images_coco(coco_dir_test, result):
   for key in result:
     if len(result[key])>0:
       print(key,result[key])
